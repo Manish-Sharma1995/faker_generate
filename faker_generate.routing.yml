@@ -1,0 +1,7 @@
+content.faker_generate:
+  path: '/admin/config/generate/content'
+  defaults:
+    _title: 'Generate content'
+    _form: '\Drupal\faker_generate\Form\FakerGenerateContentForm'
+  requirements:
+    _permission: 'access content'
