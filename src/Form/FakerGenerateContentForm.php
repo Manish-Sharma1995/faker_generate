@@ -108,66 +108,20 @@ class FakerGenerateContentForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $faker = Faker\Factory::create();
-    $name = $faker->name;
 
-    $values = $form_state->getValues();
-    if (!isset($values['settings']['time_range'])) {
-      $values['settings']['time_range'] = 0;
-    }
-    $content_types = $values['settings']['node_types'];
-    $num = $values['settings']['num'];
+    //FakerGenerate::generateContent($form_state->getValues());
 
-    $users = FakerGenerate::getUsers($num);
-
-    if (!empty($values['settings']['del']) && array_filter($content_types)) {
-      FakerGenerate::deleteContent(array_filter($content_types));
-    }
-
-    for ($i = 1; $i <= $num; $i++) {
-      $content_type = array_rand(array_filter($content_types));
-      $uid = $users[array_rand($users)];
-      // Creating a node...
-      $node = Node::create([
-        'nid' => NULL,
-        'type' => $content_type,
-        'title' => $name,
-        'uid' => $uid,
-        'revision' => mt_rand(0, 1),
-        'status' => TRUE,
-        'promote' => mt_rand(0, 1),
-        'created' => REQUEST_TIME - mt_rand(0, $values['settings']['time_range']),
-        'langcode' => 'en',
-        'body' => $faker->realText($maxNbChars = 300, $indexSize = 2),
-      ]);
-      $entityManager = \Drupal::service('entity_field.manager');
-      $fields = $entityManager->getFieldDefinitions('node', $content_type);
-      foreach ($fields as $field_name => $field_definition) {
-        if (!empty($field_definition->getTargetBundle())) {
-          $bundleFields[$field_name]['type'] = $field_definition->getType();
-          $bundleFields[$field_name]['label'] = $field_definition->getLabel();
-          switch($bundleFields[$field_name]['type'])  {
-            case 'email':
-              $node->set($field_definition->getName(), $faker->email);
-              break;
-            case 'image':
-              $image = $faker->image('sites/default/files', $width = 640, $height = 480);
-              $data = file_get_contents($image);
-              $file = file_save_data($data, "public://sample.png", FILE_EXISTS_REPLACE);
-              $node->set($field_definition->getName(), [
-                'target_id' => $file->id(),
-                'alt' => 'Random Image',
-                'title' => 'Some Random Image'
-              ]);
-              break;
-            case 'datetime':
-              $node->set($field_definition->getName(), $faker->date());
-              break;
-          }
-          //\Drupal::logger('fake_generator')->notice('Type: ' . $bundleFields[$field_name]['type']);
-        }
-      }
-      $node->save();
-    }
+    $batch = array(
+      'init_message' => t('Executing batch process...'),
+      'title' => t('Creating nodes'),
+      'operations' => array(
+                            array(
+                                '\Drupal\faker_generate\FakerGenerate::generateContent()',
+                                array($form_state->getValues())
+                            ),
+                          ),
+      'finished' => '\Drupal\faker_generate\FakerGenerate::nodesGeneratedFinishedCallback()',
+    );
+    batch_set($batch);
   }
 }
