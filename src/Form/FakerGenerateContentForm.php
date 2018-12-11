@@ -116,11 +116,11 @@ class FakerGenerateContentForm extends FormBase {
       'title' => t('Creating nodes'),
       'operations' => array(
                             array(
-                                '\Drupal\faker_generate\FakerGenerate::generateContent()',
+                                '\Drupal\faker_generate\FakerGenerate::generateContent',
                                 array($form_state->getValues())
                             ),
                           ),
-      'finished' => '\Drupal\faker_generate\FakerGenerate::nodesGeneratedFinishedCallback()',
+      'finished' => '\Drupal\faker_generate\FakerGenerate::nodesGeneratedFinishedCallback',
     );
     batch_set($batch);
   }
